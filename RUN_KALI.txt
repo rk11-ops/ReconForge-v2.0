@@ -1,0 +1,79 @@
+ReconForge 4.5.0 quick start
+
+# 1) Python environment
+python3 -m venv .venv
+source .venv/bin/activate
+python3 -m pip install --upgrade pip
+python3 -m pip install -r requirements.txt
+
+# 2) Recommended tooling
+sudo apt update
+sudo apt install nmap nikto wapiti sqlmap ffuf feroxbuster seclists
+
+# Optional: Nuclei + current templates from the official project distribution.
+command -v nuclei || true
+nuclei -version 2>/dev/null || true
+
+# 3) Verify
+command -v nmap nikto wapiti sqlmap ffuf feroxbuster
+
+# 4) First preview — no scanner processes or passive network requests
+python3 reconforge.py 127.0.0.1 --authorized --mode basic --dry-run
+
+# 5) URL target
+python3 reconforge.py https://app.example.test --authorized --mode deep
+
+# 6) URL with custom port/path
+python3 reconforge.py https://app.example.test:8443/api/v1 --authorized --mode deep
+
+# 7) IPv4 / host:port target
+python3 reconforge.py 192.0.2.10 --authorized --mode basic
+python3 reconforge.py 192.0.2.10:8080 --authorized --mode basic
+
+# 8) Scope enforcement
+python3 reconforge.py app.example.test --authorized --scope scope.example.txt --mode deep
+
+# 9) Bounded SQLMap on discovered/explicit parameterized endpoint
+python3 reconforge.py 'https://app.example.test/item?id=1' \
+  --authorized --mode advanced --sqlmap force
+
+# 10) Local Qwen 4B GGUF triage
+python3 reconforge.py https://app.example.test --authorized --mode deep \
+  --qwen-gguf ~/models/qwen4b.gguf
+
+# 11) Official testssl.sh integration
+./scripts/install_testssl.sh
+
+# 12) Install the package command (optional)
+python3 -m pip install -e .
+reconforge --help
+
+# 13) Reports are written under:
+# reconforge-results/<host>-<mode>-<scan-id>/
+#   report.json
+#   report.html
+#   state.json
+#   artifacts/
+#   logs/
+#   commands/
+#   evidence/manifest.json
+
+22) Safe web audit only (no external active scanner stack)
+-----------------------------------------------------------
+python3 -m reconforge https://<AUTHORIZED_TARGET> --authorized --audit-only
+
+23) Full web assessment with Burp-style bounded crawl
+------------------------------------------------------
+python3 -m reconforge https://<AUTHORIZED_TARGET> \
+  --authorized \
+  --mode deep \
+  --crawl-depth 3 \
+  --crawl-pages 100 \
+  --crawl-rate 2 \
+  --crawl-concurrency 4
+
+24) Disable crawl
+-----------------
+python3 -m reconforge https://<AUTHORIZED_TARGET> --authorized --no-crawl
+
+The crawler is GET-only: it discovers forms and records their method/action/input names, but it does not submit forms or provide exploit payloads.
